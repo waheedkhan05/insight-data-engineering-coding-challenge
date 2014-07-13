@@ -86,8 +86,8 @@ class Hand:
                 value += 10
         return value
 
-# PLAYER_CARDS = Hand()
-# DEALER_CARDS = Hand()
+PLAYER_CARDS = Hand()
+DEALER_CARDS = Hand()
 
 class Game(object):
 	_chips = CHIPS_MAX
@@ -95,12 +95,11 @@ class Game(object):
 	_deal_in_progress = False
 
 	def deal(self):
-    # deal function deals initial hands and adjusts MESSAGE
 		global GAME_IN_PROGRESS, PLAYER_CARDS, DEALER_CARDS, deck, MESSAGE, SCORE, RESULT
 		SCORE = 0
 		self._deal_in_progress = True
 		if GAME_IN_PROGRESS:
-			MESSAGE = "Do you want to Hit or Stand?"
+			MESSAGE = "Would you like to Hit or Stand?"
 			SCORE -= 1
 			deck = Deck()
 			PLAYER_CARDS = Hand()
@@ -117,7 +116,7 @@ class Game(object):
 			DEALER_CARDS.add_card(deck.deal_card())
 			PLAYER_CARDS.add_card(deck.deal_card())
 			DEALER_CARDS.add_card(deck.deal_card())
-			MESSAGE = "Do you want to Hit or Stand?"
+			MESSAGE = "Would you like to Hit or Stand?"
 		GAME_IN_PROGRESS = True
 		RESULT = ""
 
@@ -141,18 +140,15 @@ class Game(object):
 
 
 	def hit(self):
-	    # deals PLAYER_CARDS a new hand and ends hand if it causes a bust.
 	    global GAME_IN_PROGRESS, SCORE, MESSAGE
 	    if GAME_IN_PROGRESS == True and self._deal_in_progress:
 	        PLAYER_CARDS.add_card(deck.deal_card())
 	        MESSAGE = "Would you like to Hit or Stand?"
 	        if PLAYER_CARDS.get_value() > 21:
-	            # GAME_IN_PROGRESS = False
 	            self._deal_in_progress = False
 	            MESSAGE = "You are busted! You Lose! Deal again?"
 	            self._chips = int(self._chips) - int(self._current_bet)
 	            SCORE -= 1
-	            RESULT = "Dealer : " + str(DEALER_CARDS.get_value()) + "  You: " + str(PLAYER_CARDS.get_value())
 
 	def stand(self):
 	    global GAME_IN_PROGRESS, SCORE, MESSAGE, RESULT
@@ -166,35 +162,40 @@ class Game(object):
 				MESSAGE = "Congratulations! The Dealer is busted. You win! Deal again?"
 				SCORE += 1
 				self._deal_in_progress = False
-				# GAME_IN_PROGRESS = False
 	            
 	        elif DEALER_CARDS.get_value() > PLAYER_CARDS.get_value():
 				self._chips = self._chips - self._current_bet
-				MESSAGE = "Dealer wins! Play again?"
+				MESSAGE = "The Dealer won! Deal again?"
 				SCORE -= 1
 				self._deal_in_progress = False
-				# GAME_IN_PROGRESS = False
 	        
 	        elif DEALER_CARDS.get_value() == PLAYER_CARDS.get_value():
 	            MESSAGE = "Tied! The Dealer is given the game in case of tie. Deal again?"
 	            self._chips = self._chips - self._current_bet
 	            SCORE -= 1
 	            self._deal_in_progress = False
-	            # GAME_IN_PROGRESS = False
 	        
 	        elif DEALER_CARDS.get_value() < PLAYER_CARDS.get_value():
 				self._chips = self._chips + self._current_bet
 				MESSAGE = "Congratulations! You win! Deal again?"
 				SCORE += 1
 				self._deal_in_progress = False
-				# GAME_IN_PROGRESS = False
-	            
-	        RESULT = "DEALER_CARDS: " + str(DEALER_CARDS.get_value()) + "  PLAYER_CARDS: " + str(PLAYER_CARDS.get_value())
         
 	def is_game_end(self):
 		global GAME_IN_PROGRESS
 		if self._chips <= 0:
 			GAME_IN_PROGRESS = False	
+
+	def face_down(self,hand):
+		as_string = ""
+		i = 0
+		while i < len(hand.player_hand):
+			if i > 0:
+				as_string += '{FACE_DOWN}' + "  "
+			else:
+				as_string += str(hand.player_hand[i]) + "  "
+			i = i + 1
+		return as_string
 
 	def instructions(self):
 		return "Press %s for Hit, %s for Stand, %s for Deal and to change Bet press %s"%(KEYS['HIT'],KEYS['STAND'],KEYS['DEAL'],KEYS['BET'])
@@ -218,7 +219,7 @@ SCORE : %s        RESULT : %s
 **************************************************************
   %s 
 **************************************************************
-	"""%(MESSAGE,self.get_current_chips(),self._current_bet,PLAYER_CARDS.show_hand(),DEALER_CARDS.show_hand(),SCORE,RESULT,self.instructions())
+	"""%(MESSAGE,self.get_current_chips(),self._current_bet,PLAYER_CARDS.show_hand(),self.face_down(DEALER_CARDS) if self._deal_in_progress else DEALER_CARDS.show_hand(),SCORE,RESULT,self.instructions())
 
 
 def main_function():
@@ -236,7 +237,7 @@ def main_function():
 			c.deal()
 		elif inp == KEYS['BET'] or inp == KEYS['BET'].lower():
 			c.bet_change_menu()
-		RESULT = "PLAYER_CARDS = %s , DEALER_CARDS = %s"%(PLAYER_CARDS.get_value(),DEALER_CARDS.get_value())
+		RESULT = "PLAYER = %s , DEALER = %s"%(PLAYER_CARDS.get_value(),DEALER_CARDS.get_value() if not c._deal_in_progress else str("***"))
 		c.table_draw()
 		c.is_game_end()
 	print "The game ended. If you want to play again press P, Press any other key for exit"
